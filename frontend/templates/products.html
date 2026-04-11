@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Catalog</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #232f3e; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .back { margin-bottom: 15px; display: inline-block; color: #0066c0; }
+        .search { margin: 10px 0; }
+        input[type=text] { padding: 8px; width: 250px; }
+        button { padding: 8px 15px; background: #ff9900; border: none; cursor: pointer; font-weight: bold; }
+        .btn-delete { background: #dc3545; color: white; padding: 6px 12px; border: none; cursor: pointer; font-size: 12px; }
+        .btn-edit { background: #0066c0; color: white; padding: 6px 12px; text-decoration: none; font-size: 12px; display: inline-block; }
+        .flash-success { background: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash-error { background: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <a class="back" href="/">&larr; Back to Home</a>
+    <h1>Product Catalog</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form class="search" action="/search_products" method="get">
+        <input type="text" name="q" placeholder="Search products..." value="{{ search_query or '' }}">
+        <button type="submit">Search</button>
+    </form>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Category</th>
+            <th>Seller</th>
+            <th>Avg Rating</th>
+            <th>Reviews</th>
+            <th>Actions</th>
+        </tr>
+        {% for p in products %}
+        <tr>
+            <td>{{ p.product_id }}</td>
+            <td>{{ p.product_name }}</td>
+            <td>${{ p.price }}</td>
+            <td>{{ p.stock_quantity }}</td>
+            <td>{{ p.category }}{% if p.parent_category %} ({{ p.parent_category }}){% endif %}</td>
+            <td>{{ p.seller }}</td>
+            <td>{{ p.avg_product_rating or 'No ratings' }}</td>
+            <td>{{ p.total_reviews }}</td>
+            <td>
+                <a class="btn-edit" href="/edit_product/{{ p.product_id }}">Edit</a>
+                <form style="display:inline" method="post" action="/delete_product/{{ p.product_id }}" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                    <button class="btn-delete" type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,0 +1,28 @@
+Our Proposal: 
+
+
+Project Title: Amazon-Style E-Commerce Platform Database
+
+Scenario: Our team will build a database system that models a simplified Amazon-like e-commerce platform. The system will manage the core operations of an online marketplace, tracking products across multiple categories, customer accounts and their orders, seller storefronts, product reviews, and shipping logistics. The database will support the full lifecycle of an online purchase, from browsing and adding items to a cart, to placing an order, processing payment, and tracking delivery.
+
+Entities:
+
+• Customers: account info, addresses, payment methods
+• Products: name, description, price, category, stock quantity
+• Sellers: storefront info, ratings, product listings
+• Orders: order date, status, total, linked to customer and shipping
+• Order_Items: individual products within an order (quantity, price at purchase)
+• Reviews: rating, comment, linked to customer and product
+• Categories: product categories and subcategories
+• Shipping: tracking number, carrier, status, estimated delivery date
+
+Operations:
+
+• Add, update, and delete products, customers, and sellers
+• Place orders and update order status (pending, shipped, delivered)
+• Search and filter products by category, price range, rating, and seller
+• Submit and view product reviews and ratings
+• Track shipping status for orders
+• Generate reports: top-selling products, revenue by seller, monthly sales trends, average product ratings
+
+AI Declaration: We used ChatGPT to assist with brainstorming entity relationships and refining the scope of operations for the e-commerce model.
