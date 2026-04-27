@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Customers · Amazon DB{% endblock %}
+{% block page_title %}Customers{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Customer Management</h1>
+    <a href="/add_customer" class="btn btn-primary">+ Add Customer</a>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding-bottom:12px;">
+        <form method="get" action="/customers">
+            <div class="filters-bar">
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" name="q" placeholder="Name or email…" value="{{ search_query or '' }}">
+                </div>
+                <div class="form-group" style="justify-content:flex-end;">
+                    <label style="visibility:hidden">.</label>
+                    <div style="display:flex; gap:6px;">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="/customers" class="btn btn-secondary">Clear</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Orders</th>
+                    <th>Total Spent</th>
+                    <th>Member Since</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in customers %}
+                <tr>
+                    <td class="text-muted">#{{ c.customer_id }}</td>
+                    <td><strong>{{ c.first_name }} {{ c.last_name }}</strong></td>
+                    <td>{{ c.email }}</td>
+                    <td>{{ c.phone or '—' }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'delivered' if c.total_orders > 0 else 'pending' }}">
+                            {{ c.total_orders }} orders
+                        </span>
+                    </td>
+                    <td><strong>${{ "%.2f"|format(c.total_spent) }}</strong></td>
+                    <td class="text-muted">{{ c.created_at.strftime('%b %d, %Y') if c.created_at else '—' }}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <a href="/customer/{{ c.customer_id }}" class="btn btn-secondary btn-sm">Profile</a>
+                            <a href="/edit_customer/{{ c.customer_id }}" class="btn btn-edit btn-sm">Edit</a>
+                            <form method="post" action="/delete_customer/{{ c.customer_id }}" onsubmit="return confirm('Delete {{ c.first_name }} {{ c.last_name }}? This cannot be undone.');">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No customers found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

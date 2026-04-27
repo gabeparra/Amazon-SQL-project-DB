@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.first_name }} {{ customer.last_name }} · Amazon DB{% endblock %}
+{% block page_title %}Customer Profile{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ customer.first_name }} {{ customer.last_name }}</h1>
+    <div style="display:flex; gap:8px;">
+        <a href="/edit_customer/{{ customer.customer_id }}" class="btn btn-edit">Edit Customer</a>
+        <a href="/customers" class="btn btn-secondary">← Back</a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value">{{ stats.total_orders or 0 }}</div>
+        <div class="stat-icon">🛒</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-value">${{ "%.0f"|format(stats.total_spent or 0) }}</div>
+        <div class="stat-icon">💰</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Avg Order Value</div>
+        <div class="stat-value">${{ "%.0f"|format(stats.avg_order_value or 0) }}</div>
+        <div class="stat-icon">📊</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Last Order</div>
+        <div class="stat-value" style="font-size:16px;">{{ stats.last_order_date.strftime('%b %d') if stats.last_order_date else '—' }}</div>
+        <div class="stat-icon">📅</div>
+    </div>
+</div>
+
+<div class="two-col">
+
+    <!-- ORDER HISTORY -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Order History</h2>
+            <a href="/new_order" class="btn btn-primary btn-sm">+ New Order</a>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Tracking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in order_history %}
+                    <tr>
+                        <td><strong>#{{ o.order_id }}</strong></td>
+                        <td class="text-muted">{{ o.order_date.strftime('%b %d, %Y') if o.order_date else '—' }}</td>
+                        <td>{{ o.product_name }}</td>
+                        <td>{{ o.quantity }}</td>
+                        <td><strong>${{ o.total_amount }}</strong></td>
+                        <td><span class="badge badge-{{ o.status }}">{{ o.status }}</span></td>
+                        <td>
+                            {% if o.tracking_number %}
+                                <span style="font-size:11px;">{{ o.tracking_number }}<br>
+                                <span class="text-muted">{{ o.carrier }}</span></span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No orders yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- CONTACT INFO -->
+        <div class="card">
+            <div class="card-header"><h2>Contact Info</h2></div>
+            <div class="card-body">
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div class="field-info">
+                        <span class="text-muted" style="font-size:11px; font-weight:600; text-transform:uppercase;">Email</span>
+                        <div style="font-size:14px; margin-top:2px;">{{ customer.email }}</div>
+                    </div>
+                    <div class="field-info">
+                        <span class="text-muted" style="font-size:11px; font-weight:600; text-transform:uppercase;">Phone</span>
+                        <div style="font-size:14px; margin-top:2px;">{{ customer.phone or '—' }}</div>
+                    </div>
+                    <div class="field-info">
+                        <span class="text-muted" style="font-size:11px; font-weight:600; text-transform:uppercase;">Member Since</span>
+                        <div style="font-size:14px; margin-top:2px;">{{ customer.created_at.strftime('%B %d, %Y') if customer.created_at else '—' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAVORITE PRODUCTS -->
+        <div class="card">
+            <div class="card-header"><h2>Most Purchased Products</h2></div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Product</th><th>Times Bought</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in fav_products %}
+                        <tr>
+                            <td>{{ p.name }}</td>
+                            <td><span class="badge badge-delivered">{{ p.times_purchased }}×</span></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="2" class="text-muted" style="padding:16px; text-align:center;">No purchases yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

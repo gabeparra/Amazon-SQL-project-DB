@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} Analytics · Amazon DB{% endblock %}
+{% block page_title %}Product Analytics{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ product.name }}</h1>
+    <div style="display:flex; gap:8px;">
+        <a href="/edit_product/{{ product.product_id }}" class="btn btn-edit">Edit Product</a>
+        <a href="/products" class="btn btn-secondary">← Back</a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-label">Units Sold</div>
+        <div class="stat-value">{{ sales.total_units_sold or 0 }}</div>
+        <div class="stat-icon">📦</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">${{ "%.0f"|format(sales.total_revenue or 0) }}</div>
+        <div class="stat-icon">💰</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Repeat Buy Rate</div>
+        <div class="stat-value">{{ repeat_rate }}%</div>
+        <div class="stat-icon">🔄</div>
+        <div class="text-muted">of buyers ordered again</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Stock Remaining</div>
+        <div class="stat-value" style="color:{{ '#b12704' if product.stock_quantity < 10 else '#067d62' }};">
+            {{ product.stock_quantity }}
+        </div>
+        <div class="stat-icon">🏭</div>
+    </div>
+</div>
+
+<div class="two-col">
+
+    <!-- RATING BREAKDOWN -->
+    <div class="card">
+        <div class="card-header"><h2>⭐ Rating Breakdown</h2></div>
+        <div class="card-body">
+            {% if ratings.total_reviews > 0 %}
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="font-size:48px; font-weight:700; color:var(--text-primary);">{{ ratings.avg_rating or '—' }}</div>
+                <div style="color:#ff9900; font-size:22px;">
+                    {% for i in range(5) %}
+                        {% if i < (ratings.avg_rating | int) %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </div>
+                <div class="text-muted">{{ ratings.total_reviews }} reviews</div>
+            </div>
+            {% for stars, count in [('5', ratings.five_star), ('4', ratings.four_star), ('3', ratings.three_star), ('2', ratings.two_star), ('1', ratings.one_star)] %}
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <span style="font-size:12px; width:40px; color:var(--text-muted);">{{ stars }} ★</span>
+                <div style="background:#f0f2f2; border-radius:4px; height:10px; flex:1; overflow:hidden;">
+                    {% set pct = ((count or 0) / ratings.total_reviews * 100) | round(0) %}
+                    <div style="background:#ff9900; height:100%; width:{{ pct }}%;"></div>
+                </div>
+                <span style="font-size:12px; width:25px; color:var(--text-muted);">{{ count or 0 }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="text-align:center; padding:30px; color:var(--text-muted);">No reviews yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MONTHLY SALES TREND -->
+    <div class="card">
+        <div class="card-header"><h2>📅 Monthly Sales</h2></div>
+        <div class="card-body">
+            {% if monthly %}
+            {% set max_units = monthly | map(attribute='units') | max %}
+            {% for m in monthly %}
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <span style="font-size:12px; width:65px; color:var(--text-muted);">{{ m.month }}</span>
+                <div style="background:#f0f2f2; border-radius:4px; height:10px; flex:1; overflow:hidden;">
+                    {% set pct = (m.units / max_units * 100) | round(0) if max_units > 0 else 0 %}
+                    <div style="background:#232f3e; height:100%; width:{{ pct }}%;"></div>
+                </div>
+                <span style="font-size:12px; width:50px; color:var(--text-muted);">{{ m.units }} units</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="text-align:center; padding:30px; color:var(--text-muted);">No sales data yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- CUSTOMER REVIEWS -->
+{% if reviews %}
+<div class="card" style="margin-top:20px;">
+    <div class="card-header"><h2>💬 Customer Reviews</h2></div>
+    <div class="card-body">
+        {% for r in reviews %}
+        <div style="border-bottom: 1px solid var(--border); padding:14px 0; {% if loop.last %}border:none;{% endif %}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="font-size:14px;">{{ r.customer_name }}</strong>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="color:#ff9900;">
+                        {% for i in range(5) %}{% if i < r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                    </span>
+                    <span class="text-muted">{{ r.created_at.strftime('%b %d, %Y') if r.created_at else '' }}</span>
+                </div>
+            </div>
+            <div style="font-size:13.5px; color:var(--text-secondary);">{{ r.comment or 'No comment left.' }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

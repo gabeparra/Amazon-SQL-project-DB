@@ -1,74 +1,78 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Order Details</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 13px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #232f3e; color: white; }
-        tr:nth-child(even) { background: #f9f9f9; }
-        .back { margin-bottom: 15px; display: inline-block; color: #0066c0; }
-        select { padding: 4px; font-size: 12px; }
-        .btn-update { background: #ff9900; border: none; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-cancel { background: #dc3545; color: white; border: none; padding: 4px 10px; cursor: pointer; font-size: 12px; }
-        .flash-success { background: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .flash-error { background: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-    </style>
-</head>
-<body>
-    <a class="back" href="/">&larr; Back to Home</a>
-    <h1>Order Details</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash-{{ category }}">{{ message }}</div>
+{% extends "base.html" %}
+{% block title %}Orders · Amazon DB{% endblock %}
+{% block page_title %}Orders{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Order Management</h1>
+    <div style="display:flex; gap:8px; align-items:center;">
+        {% for s in ['', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'] %}
+        <a href="/orders{% if s %}?status={{ s }}{% endif %}"
+           class="btn btn-sm {{ 'btn-primary' if status_filter == s else 'btn-secondary' }}">
+            {{ s.capitalize() if s else 'All' }}
+        </a>
         {% endfor %}
-      {% endif %}
-    {% endwith %}
-    <table>
-        <tr>
-            <th>Order ID</th>
-            <th>Customer</th>
-            <th>City</th>
-            <th>Order Date</th>
-            <th>Status</th>
-            <th>Total</th>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Tracking</th>
-            <th>Carrier</th>
-            <th>Shipping</th>
-            <th>Actions</th>
-        </tr>
-        {% for o in orders %}
-        <tr>
-            <td>{{ o.order_id }}</td>
-            <td>{{ o.customer_name }}</td>
-            <td>{{ o.city }}</td>
-            <td>{{ o.order_date }}</td>
-            <td>{{ o.order_status }}</td>
-            <td>${{ o.total_amount }}</td>
-            <td>{{ o.product_name }}</td>
-            <td>{{ o.quantity }}</td>
-            <td>{{ o.tracking_number or '-' }}</td>
-            <td>{{ o.carrier or '-' }}</td>
-            <td>{{ o.shipping_status or '-' }}</td>
-            <td>
-                <form style="display:inline" method="post" action="/update_order_status/{{ o.order_id }}">
-                    <select name="status">
-                        {% for s in ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] %}
-                        <option value="{{ s }}" {% if s == o.order_status %}selected{% endif %}>{{ s }}</option>
-                        {% endfor %}
-                    </select>
-                    <button class="btn-update" type="submit">Update</button>
-                </form>
-                <form style="display:inline" method="post" action="/delete_order/{{ o.order_id }}" onsubmit="return confirm('Cancel this order? This will remove all associated items and shipping info.');">
-                    <button class="btn-cancel" type="submit">Cancel</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-</body>
-</html>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Ship To</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Tracking</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td><strong>#{{ o.order_id }}</strong></td>
+                    <td>{{ o.customer_name }}<br><span class="text-muted">{{ o.customer_email }}</span></td>
+                    <td>{{ o.city }}, {{ o.state }}</td>
+                    <td class="text-muted">{{ o.order_date.strftime('%b %d, %Y') if o.order_date else '' }}</td>
+                    <td><span class="badge badge-{{ o.order_status }}">{{ o.order_status }}</span></td>
+                    <td><strong>${{ o.total_amount }}</strong></td>
+                    <td>{{ o.product_name }}</td>
+                    <td>{{ o.quantity }}</td>
+                    <td>
+                        {% if o.tracking_number %}
+                            <span style="font-size:11px;">{{ o.tracking_number }}<br>
+                            <span class="text-muted">{{ o.carrier }}</span></span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="actions-cell" style="flex-direction:column; align-items:flex-start;">
+                            <form method="post" action="/update_order_status/{{ o.order_id }}" style="display:flex; gap:4px;">
+                                <select name="status" style="padding:4px 6px; font-size:11.5px; width:auto;">
+                                    {% for s in ['Pending','Processing','Shipped','Delivered','Cancelled'] %}
+                                    <option value="{{ s }}" {{ 'selected' if s.lower() == o.order_status.lower() }}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-edit btn-sm">Save</button>
+                            </form>
+                            <form method="post" action="/delete_order/{{ o.order_id }}" onsubmit="return confirm('Cancel this order? This will cascade-delete all items and shipping info.');">
+                                <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" style="text-align:center; padding:30px; color:var(--text-muted);">No orders found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

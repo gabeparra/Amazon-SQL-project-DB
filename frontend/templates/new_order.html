@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}New Order · Amazon DB{% endblock %}
+{% block page_title %}Create New Order{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Create New Order</h1>
+    <a href="/orders" class="btn btn-secondary">← Back to Orders</a>
+</div>
+
+<form method="post">
+<div class="two-col">
+
+    <!-- LEFT: Customer + Products -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <div class="card">
+            <div class="card-header"><h2>1. Select Customer</h2></div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Customer</label>
+                    <select name="customer_id" required>
+                        <option value="">— Choose a customer —</option>
+                        {% for c in customers %}
+                        <option value="{{ c.customer_id }}">{{ c.first_name }} {{ c.last_name }} ({{ c.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>2. Add Products</h2>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">+ Add Row</button>
+            </div>
+            <div class="card-body">
+                <div id="product-rows">
+                    <div class="product-row" style="display:grid; grid-template-columns:1fr 80px 40px; gap:10px; margin-bottom:10px; align-items:end;">
+                        <div class="form-group" style="margin:0;">
+                            <label>Product</label>
+                            <select name="product_id[]" required>
+                                <option value="">— Select product —</option>
+                                {% for p in products %}
+                                <option value="{{ p.product_id }}" data-price="{{ p.price }}">
+                                    {{ p.name }} — ${{ p.price }} ({{ p.stock_quantity }} in stock)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>Qty</label>
+                            <input type="number" name="quantity[]" min="1" value="1" required>
+                        </div>
+                        <div style="padding-bottom:2px;">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)" style="width:100%;">✕</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Order Summary -->
+    <div class="card" style="align-self:start; position:sticky; top:20px;">
+        <div class="card-header"><h2>Order Summary</h2></div>
+        <div class="card-body">
+            <div style="text-align:center; padding:20px 0;">
+                <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Estimated Total</div>
+                <div style="font-size:36px; font-weight:700; color:var(--text-primary);" id="total-display">$0.00</div>
+            </div>
+            <div style="background:var(--bg-main); border-radius:6px; padding:12px; margin-bottom:16px; font-size:12.5px; color:var(--text-muted); line-height:1.7;">
+                <div>✅ Stock will be reduced automatically</div>
+                <div>✅ Order will be set to <strong>Pending</strong></div>
+                <div>✅ Address auto-assigned from customer record</div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;">
+                Place Order
+            </button>
+        </div>
+    </div>
+
+</div>
+</form>
+
+<script>
+function addRow() {
+    const container = document.getElementById('product-rows');
+    const existing = container.querySelector('.product-row');
+    const clone = existing.cloneNode(true);
+    clone.querySelector('select').value = '';
+    clone.querySelector('input').value = 1;
+    clone.querySelector('button').setAttribute('onclick', 'removeRow(this)');
+    container.appendChild(clone);
+    attachListeners();
+}
+
+function removeRow(btn) {
+    const rows = document.querySelectorAll('.product-row');
+    if (rows.length > 1) btn.closest('.product-row').remove();
+    updateTotal();
+}
+
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.product-row').forEach(row => {
+        const select = row.querySelector('select');
+        const qty = parseInt(row.querySelector('input').value) || 0;
+        const opt = select.options[select.selectedIndex];
+        const price = parseFloat(opt?.dataset?.price || 0);
+        total += price * qty;
+    });
+    document.getElementById('total-display').textContent = '$' + total.toFixed(2);
+}
+
+function attachListeners() {
+    document.querySelectorAll('.product-row select, .product-row input').forEach(el => {
+        el.onchange = updateTotal;
+        el.oninput = updateTotal;
+    });
+}
+
+attachListeners();
+</script>
+
+{% endblock %}

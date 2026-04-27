@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Sellers · Amazon DB{% endblock %}
+{% block page_title %}Sellers{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Seller Marketplace</h1>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Store Name</th>
+                    <th>Rating</th>
+                    <th>Reviews</th>
+                    <th>Products</th>
+                    <th>Total Revenue</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sellers %}
+                <tr>
+                    <td class="text-muted">#{{ s.seller_id }}</td>
+                    <td><strong>{{ s.store_name }}</strong></td>
+                    <td>
+                        <span class="star">★</span>
+                        <strong>{{ s.rating }}</strong> / 5.0
+                    </td>
+                    <td>{{ s.total_reviews }}</td>
+                    <td>
+                        <span class="badge badge-processing">{{ s.total_products }} products</span>
+                    </td>
+                    <td><strong>${{ "%.2f"|format(s.total_revenue) }}</strong></td>
+                    <td class="text-muted">{{ s.joined_date }}</td>
+                    <td>
+                        <a href="/edit_seller/{{ s.seller_id }}" class="btn btn-edit btn-sm">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Reports · Amazon DB{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Reports & Analytics</h1>
+</div>
+
+<!-- ORDER STATUS SUMMARY -->
+<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-label">Pending Orders</div>
+        <div class="stat-value" style="color:#c45500;">{{ pending }}</div>
+        <div class="stat-icon">⏳</div>
+        <div class="text-muted">Awaiting processing</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Delivered Orders</div>
+        <div class="stat-value" style="color:#067d62;">{{ delivered }}</div>
+        <div class="stat-icon">✅</div>
+        <div class="text-muted">Successfully fulfilled</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Cancelled Orders</div>
+        <div class="stat-value" style="color:#b12704;">{{ cancelled }}</div>
+        <div class="stat-icon">❌</div>
+        <div class="text-muted">Lost revenue</div>
+    </div>
+</div>
+
+<div class="two-col" style="margin-bottom:20px;">
+
+    <!-- BEST SELLING PRODUCTS -->
+    <div class="card">
+        <div class="card-header"><h2>🏆 Best Selling Products</h2></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Units Sold</th>
+                        <th>Revenue</th>
+                        <th>Avg Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in top_products %}
+                    <tr>
+                        <td>
+                            {% if loop.index == 1 %}🥇
+                            {% elif loop.index == 2 %}🥈
+                            {% elif loop.index == 3 %}🥉
+                            {% else %}#{{ loop.index }}{% endif %}
+                        </td>
+                        <td><strong>{{ p.product_name }}</strong></td>
+                        <td>{{ p.category }}</td>
+                        <td><span class="badge badge-processing">{{ p.units_sold }} units</span></td>
+                        <td><strong>${{ "%.2f"|format(p.revenue) }}</strong></td>
+                        <td>{% if p.avg_rating %}<span class="star">★</span> {{ p.avg_rating }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TOP CUSTOMERS -->
+    <div class="card">
+        <div class="card-header"><h2>👑 Top Customers</h2></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Customer</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in top_customers %}
+                    <tr>
+                        <td>
+                            {% if loop.index == 1 %}🥇
+                            {% elif loop.index == 2 %}🥈
+                            {% elif loop.index == 3 %}🥉
+                            {% else %}#{{ loop.index }}{% endif %}
+                        </td>
+                        <td><strong>{{ c.customer_name }}</strong></td>
+                        <td>{{ c.total_orders }}</td>
+                        <td><strong>${{ "%.2f"|format(c.total_spent) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="two-col" style="margin-bottom:20px;">
+
+    <!-- REVENUE BY CATEGORY -->
+    <div class="card">
+        <div class="card-header"><h2>📦 Revenue by Category</h2></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Products</th>
+                        <th>Units Sold</th>
+                        <th>Revenue</th>
+                        <th>Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total_rev = category_revenue | sum(attribute='revenue') %}
+                    {% for c in category_revenue %}
+                    <tr>
+                        <td><strong>{{ c.category }}</strong></td>
+                        <td>{{ c.total_products }}</td>
+                        <td>{{ c.units_sold }}</td>
+                        <td><strong>${{ "%.2f"|format(c.revenue) }}</strong></td>
+                        <td>
+                            {% set pct = (c.revenue / total_rev * 100) | round(1) if total_rev > 0 else 0 %}
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div style="background:#232f3e; border-radius:4px; height:8px; width:80px; overflow:hidden;">
+                                    <div style="background:#ff9900; height:100%; width:{{ pct }}%;"></div>
+                                </div>
+                                <span class="text-muted">{{ pct }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SELLER LEADERBOARD -->
+    <div class="card">
+        <div class="card-header"><h2>🏪 Seller Leaderboard</h2></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Store</th>
+                        <th>Products</th>
+                        <th>Units</th>
+                        <th>Revenue</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in seller_revenue %}
+                    <tr>
+                        <td>
+                            {% if loop.index == 1 %}🥇
+                            {% elif loop.index == 2 %}🥈
+                            {% elif loop.index == 3 %}🥉
+                            {% else %}#{{ loop.index }}{% endif %}
+                        </td>
+                        <td><strong>{{ s.store_name }}</strong></td>
+                        <td>{{ s.total_products }}</td>
+                        <td>{{ s.units_sold }}</td>
+                        <td><strong>${{ "%.2f"|format(s.revenue) }}</strong></td>
+                        <td><span class="star">★</span> {{ s.rating }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MONTHLY SALES TREND -->
+<div class="card">
+    <div class="card-header"><h2>📅 Monthly Sales Trend</h2></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Orders</th>
+                    <th>Revenue</th>
+                    <th>Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set max_rev = monthly_sales | map(attribute='revenue') | max if monthly_sales else 1 %}
+                {% for m in monthly_sales %}
+                <tr>
+                    <td><strong>{{ m.month }}</strong></td>
+                    <td>{{ m.total_orders }}</td>
+                    <td><strong>${{ "%.2f"|format(m.revenue) }}</strong></td>
+                    <td>
+                        {% set pct = (m.revenue / max_rev * 100) | round(1) if max_rev > 0 else 0 %}
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="background:#f0f2f2; border-radius:4px; height:10px; width:200px; overflow:hidden;">
+                                <div style="background:#232f3e; height:100%; width:{{ pct }}%; transition: width 0.3s;"></div>
+                            </div>
+                            <span class="text-muted">${{ "%.0f"|format(m.revenue) }}</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
