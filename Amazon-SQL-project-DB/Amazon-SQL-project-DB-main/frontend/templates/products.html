@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Products · Amazon DB{% endblock %}
+{% block page_title %}Products{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Product Catalog</h1>
+    <a href="/add_product" class="btn btn-primary">+ Add Product</a>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding-bottom: 12px;">
+        <form method="get" action="/products">
+            <div class="filters-bar">
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" name="q" placeholder="Product name…" value="{{ search_query or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="">All Categories</option>
+                        {% for c in categories %}
+                        <option value="{{ c.name }}" {{ 'selected' if selected_category == c.name }}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Min Price ($)</label>
+                    <input type="number" name="min_price" placeholder="0" value="{{ min_price or '' }}" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Max Price ($)</label>
+                    <input type="number" name="max_price" placeholder="Any" value="{{ max_price or '' }}" step="0.01" min="0">
+                </div>
+                <div class="form-group" style="justify-content: flex-end;">
+                    <label style="visibility:hidden">.</label>
+                    <div style="display:flex; gap:6px;">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="/products" class="btn btn-secondary">Clear</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Category</th>
+                    <th>Seller</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td class="text-muted">#{{ p.product_id }}</td>
+                    <td><strong>{{ p.product_name }}</strong><br><span class="text-muted">{{ (p.description or '')[:50] }}{% if p.description and p.description|length > 50 %}…{% endif %}</span></td>
+                    <td><strong>${{ p.price }}</strong></td>
+                    <td>
+                        <span class="badge {{ 'badge-cancelled' if p.stock_quantity < 10 else 'badge-delivered' }}">
+                            {{ p.stock_quantity }}
+                        </span>
+                    </td>
+                    <td>{{ p.category }}{% if p.parent_category and p.parent_category != 'Top Category' %}<br><span class="text-muted">{{ p.parent_category }}</span>{% endif %}</td>
+                    <td>{{ p.seller }}<br><span class="text-muted">⭐ {{ p.seller_rating }}</span></td>
+                    <td>
+                        {% if p.avg_product_rating %}
+                            <span class="star">★</span> {{ p.avg_product_rating }}
+                            <br><span class="text-muted">({{ p.total_reviews }} reviews)</span>
+                        {% else %}
+                            <span class="text-muted">No ratings</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            <a href="/product/{{ p.product_id }}/analytics" class="btn btn-secondary btn-sm">Analytics</a>
+                            <a href="/edit_product/{{ p.product_id }}" class="btn btn-edit btn-sm">Edit</a>
+                            <form method="post" action="/delete_product/{{ p.product_id }}" onsubmit="return confirm('Delete this product?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No products found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
