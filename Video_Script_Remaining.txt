@@ -1,0 +1,71 @@
+REMAINING VIDEO SCRIPT (pick up from ~5:00)
+
+[5:00-5:45] ER DIAGRAM EXPLANATION
+"So here's our ER diagram. We have 10 tables total. The main flow is:
+Customers place Orders, and each Order has Order Items that link to Products.
+Products belong to Categories, which can have subcategories through a self-referencing
+foreign key. Each Product is listed by a Seller. Customers can also leave Reviews
+on Products. Orders connect one-to-one with Shipping for tracking info.
+And Customers have separate tables for Addresses and Payment Methods,
+so one customer can have multiple of each."
+
+[5:45-7:15] QUERIES AND REPORTS (switch to MySQL Workbench)
+"Now let me show some queries running directly in MySQL Workbench."
+
+"First, let's search for products by name using a LIKE query:"
+SELECT product_id, name, price, stock_quantity
+FROM products
+WHERE name LIKE '%Laptop%';
+
+"We can also filter products by price range, joining with categories and sellers:"
+SELECT p.name, p.price, c.name AS category, s.store_name AS seller
+FROM products p
+JOIN categories c ON p.category_id = c.category_id
+JOIN sellers s ON p.seller_id = s.seller_id
+WHERE p.price BETWEEN 100 AND 500
+ORDER BY p.price DESC;
+
+"For reports, here are our top-selling products by quantity sold:"
+SELECT p.name, SUM(oi.quantity) AS total_sold,
+       SUM(oi.quantity * oi.price_at_purchase) AS total_revenue
+FROM products p
+JOIN order_items oi ON p.product_id = oi.product_id
+JOIN orders o ON oi.order_id = o.order_id
+WHERE o.status != 'cancelled'
+GROUP BY p.product_id, p.name
+ORDER BY total_sold DESC
+LIMIT 5;
+
+"And here's revenue by seller:"
+SELECT s.store_name, COUNT(DISTINCT o.order_id) AS total_orders,
+       SUM(oi.quantity * oi.price_at_purchase) AS total_revenue
+FROM sellers s
+LEFT JOIN products p ON s.seller_id = p.seller_id
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+LEFT JOIN orders o ON oi.order_id = o.order_id AND o.status != 'cancelled'
+GROUP BY s.seller_id, s.store_name
+ORDER BY total_revenue DESC;
+
+[7:15-8:15] VIEWS
+"We also created two views that simplify common queries."
+
+"The first is vw_product_catalog, which combines product info with seller details,
+category hierarchy, and average ratings all in one place:"
+SELECT * FROM vw_product_catalog;
+
+"So you can see each product with its category, parent category, seller, seller rating,
+average product rating, and number of reviews — all from one view."
+
+"The second view is vw_order_details, which gives a complete picture of every order:"
+SELECT * FROM vw_order_details WHERE order_id = 1;
+
+"This joins six tables — orders, customers, addresses, order items, products, and shipping —
+so you can see the customer name, shipping address, each item they ordered, the line totals,
+and the tracking information, all in one query."
+
+[8:15-8:45] CONCLUSION
+"So in summary, our database handles the full e-commerce lifecycle — from browsing
+products, to placing orders, tracking shipping, and managing reviews. Everything is
+normalized to Third Normal Form so there's no redundant data. The two views make
+reporting easy. And the Flask frontend we showed earlier demonstrates all CRUD
+operations against the live database. Thank you for watching."

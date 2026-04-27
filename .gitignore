@@ -46,6 +46,9 @@ logs/
 *.swo
 *~
 
+# ===== Archives =====
+archives/
+
 # ===== OS =====
 .DS_Store
 Thumbs.db

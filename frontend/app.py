@@ -5,9 +5,9 @@ app = Flask(__name__)
 app.secret_key = 'amazon_db_secret_key'
 
 DB_CONFIG = {
-    'host': 'localhost',
+    'host': '172.31.240.1',
     'user': 'root',
-    'password': 'root',  # CHANGE THIS TO YOUR MYSQL ROOT PASSWORD
+    'password': '160594',
     'database': 'amazon_ecommerce'
 }
 
