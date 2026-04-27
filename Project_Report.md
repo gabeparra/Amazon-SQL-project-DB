@@ -90,3 +90,5 @@ Given more time, we would make the following improvements to the system:
 7. AI Usage Declaration
 
 We used ChatGPT to assist with brainstorming entity relationships, refining the scope of operations for the e-commerce model, and generating SQL query examples. We also used Claude (Anthropic) to assist with debugging the Flask frontend application and configuring the database connection between WSL and Windows MySQL.
+
+Claude was used for the front end styling. and creation of certain functionalitys such as displaying the most sold products. And bug fixed lots of my code and completed my psuedo code
