@@ -224,7 +224,8 @@ INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALU
 
 UPDATE orders SET total_amount = (
     SELECT SUM(quantity * price_at_purchase) FROM order_items WHERE order_id = orders.order_id
-);
+)
+WHERE order_id > 0;
 
 INSERT INTO shipping (order_id, tracking_number, carrier, status, estimated_delivery, shipped_date, delivered_date) VALUES
 (1, 'TRK123456789', 'FedEx', 'delivered', '2024-03-04', '2024-03-01', '2024-03-03'),

@@ -21,9 +21,11 @@ ORDER BY p.price DESC;
 SELECT p.name, p.price, p.stock_quantity, c.name AS category
 FROM products p
 JOIN categories c ON p.category_id = c.category_id
-WHERE c.name = 'Electronics' 
-   OR c.parent_category_id = (SELECT category_id FROM categories WHERE name = 'Electronics')
-   AND p.stock_quantity > 50;
+WHERE (
+    c.name = 'Electronics'
+    OR c.parent_category_id = (SELECT category_id FROM categories WHERE name = 'Electronics')
+)
+  AND p.stock_quantity > 50;
 
 -- 4. Search orders by customer name and status
 SELECT o.order_id, CONCAT(c.first_name, ' ', c.last_name) AS customer,

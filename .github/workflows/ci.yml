@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  sql-and-frontend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pci_root_password"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify Schema.sql on MySQL 8.4
+        env:
+          MYSQL_PWD: ci_root_password
+        run: |
+          mysql -h 127.0.0.1 -u root < Schema.sql
+          table_count=$(mysql -h 127.0.0.1 -u root -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='amazon_ecommerce' AND table_type='BASE TABLE';")
+          view_count=$(mysql -h 127.0.0.1 -u root -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='amazon_ecommerce' AND table_type='VIEW';")
+          echo "Tables: $table_count, Views: $view_count"
+          test "$table_count" -eq 10
+          test "$view_count" -eq 2
+          mysql -h 127.0.0.1 -u root -D amazon_ecommerce -e "SELECT COUNT(*) FROM vw_product_catalog; SELECT COUNT(*) FROM vw_order_details;"
+
+      - name: Verify modular scripts, views, and queries on MySQL 8.4
+        env:
+          MYSQL_PWD: ci_root_password
+        run: |
+          mysql -h 127.0.0.1 -u root -e "DROP DATABASE IF EXISTS amazon_ecommerce;"
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Tables/01_create_tables.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Tables/02_insert_data.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Views/view_1_product_catalog.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Views/view_2_order_details.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Queries/04_search_filter_queries.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Queries/05_report_queries.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Queries/01_insert_operations.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Queries/02_update_operations.sql
+          mysql -h 127.0.0.1 -u root < Project_Implementation/Queries/03_delete_operations.sql
+          remaining_order3=$(mysql -h 127.0.0.1 -u root -N -D amazon_ecommerce -e "SELECT COUNT(*) FROM order_items WHERE order_id = 3;")
+          test "$remaining_order3" -eq 0
+
+      - name: Smoke-test Flask frontend against live MySQL
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: "3306"
+          MYSQL_USER: root
+          MYSQL_PASSWORD: ci_root_password
+          MYSQL_DATABASE: amazon_ecommerce
+          FLASK_SECRET_KEY: ci-test-secret
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r frontend/requirements.txt
+          python -m py_compile frontend/app.py
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "frontend")
+          import app as webapp
+
+          client = webapp.app.test_client()
+          for path in ["/", "/products", "/orders", "/add_product", "/search_products?q=Laptop"]:
+              resp = client.get(path)
+              assert resp.status_code == 200, f"{path} returned {resp.status_code}"
+          print("All Flask routes returned HTTP 200 against live MySQL.")
+          PY
