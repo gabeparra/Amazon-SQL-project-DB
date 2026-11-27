@@ -57,8 +57,8 @@
             <td>
                 <form style="display:inline" method="post" action="/update_order_status/{{ o.order_id }}">
                     <select name="status">
-                        {% for s in ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] %}
-                        <option value="{{ s }}" {% if s == o.order_status %}selected{% endif %}>{{ s }}</option>
+                        {% for s in ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] %}
+                        <option value="{{ s }}" {% if s == (o.order_status or '').lower() %}selected{% endif %}>{{ s.title() }}</option>
                         {% endfor %}
                     </select>
                     <button class="btn-update" type="submit">Update</button>

@@ -1,15 +1,18 @@
+import os
+import secrets
 from flask import Flask, render_template, request, redirect, url_for, flash
 import mysql.connector
 
 app = Flask(__name__)
-app.secret_key = 'amazon_db_secret_key'
+app.secret_key = os.getenv('FLASK_SECRET_KEY') or secrets.token_hex(32)
 
-# MySQL Connection Config
+# MySQL Connection Config (configure via environment variables; see .env.example)
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'rootpass123',  # CHANGE THIS TO YOUR MYSQL ROOT PASSWORD
-    'database': 'amazon_ecommerce'
+    'host': os.getenv('MYSQL_HOST', '127.0.0.1'),
+    'port': int(os.getenv('MYSQL_PORT', '3306')),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE', 'amazon_ecommerce'),
 }
 
 def get_db_connection():
@@ -165,4 +168,4 @@ def search_products():
     return render_template('products.html', products=products, search_query=query)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=os.getenv('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes'))

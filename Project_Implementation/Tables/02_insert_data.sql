@@ -127,7 +127,8 @@ INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALU
 -- Update order totals to match reality
 UPDATE orders SET total_amount = (
     SELECT SUM(quantity * price_at_purchase) FROM order_items WHERE order_id = orders.order_id
-);
+)
+WHERE order_id > 0;
 
 -- ============================================
 -- INSERT SHIPPING

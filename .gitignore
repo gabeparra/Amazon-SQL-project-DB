@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+secrets.json
+config.local.py
+
+# Logs and local DB dumps
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.bak
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
